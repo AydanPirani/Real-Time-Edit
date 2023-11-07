@@ -1,1 +1,4 @@
-test, Backup, 123, 123
+test1, Master, 127.0.0.1, 12155
+test2, Backup, 127.0.0.1, 12156
+test3, Backup, 127.0.0.1, 12157
+test4, Backup, 127.0.0.1, 12158

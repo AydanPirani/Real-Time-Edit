@@ -29,9 +29,13 @@ func main() {
 
 	node_map := Parse(filename, node_ct)
 	master_node, _, witness_map := ParseByRole(node_map)
+	log.Println(master_node)
 	master_client, _ := rpc.Dial("tcp", master_node.Ip+":"+master_node.Port)
+	log.Println(master_client)
 	var witness_clients []*rpc.Client
 
+	fmt.Println(witness_map)
+	log.Printf("Client %s attempting to connect...", name)
 	for _, v := range witness_map {
 		c, _ := rpc.Dial("tcp", v.Ip+":"+v.Port)
 		witness_clients = append(witness_clients, c)
@@ -42,7 +46,11 @@ func main() {
 		log.Printf("Client %s making requests...", name)
 		args := ExecuteArgs{}
 		reply := ExecuteReply{}
+		log.Printf("Client %s calling master execute...", name)
+		log.Println(master_client)
 		master_client.Call("Master.Execute", args, reply)
+
+		log.Printf("Client %s sending record to the witness...", name)
 		for _, witness_client := range witness_clients {
 			go func(witness_client *rpc.Client) {
 				args := RecordArgs{}

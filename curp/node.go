@@ -1,6 +1,7 @@
 package curp
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/rpc"
@@ -23,6 +24,7 @@ func Connect(node *Node) *rpc.Client {
 		addr := node.Ip + ":" + node.Port
 		conn, err := rpc.Dial("tcp", addr)
 		if err != nil {
+			fmt.Println(err)
 			time.Sleep(150 * time.Millisecond)
 		} else {
 			return conn
@@ -43,6 +45,7 @@ func InitRPC(name string, node_map map[string]*Node) {
 }
 
 func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*Node, appChan chan ExecuteMsg) *Curp {
+	DPrintf("%s: creating", name)
 	c := &Curp{
 		name:            name,
 		witness_clients: ConnectMultiple(witness_map),
@@ -56,8 +59,9 @@ func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*No
 		matchIndex:      make([]int, len(peer_map)),
 		role:            ROLE_BACKUP,
 	}
-
+	DPrintf("%s: pre reg", name)
 	rpc.Register(c)
+	DPrintf("%s: post reg", name)
 	return c
 }
 

@@ -34,6 +34,8 @@ func Parse(filename string, num_nodes int) map[string]*Node {
 		log.Println("failed to open file ", filename)
 	}
 
+	seen_master := false
+
 	reader := bufio.NewScanner(file)
 	node_map := make(map[string]*Node)
 
@@ -59,6 +61,14 @@ func Parse(filename string, num_nodes int) map[string]*Node {
 			os.Exit(1)
 		}
 
+		if node.Role == ROLE_MASTER {
+			if seen_master {
+				fmt.Println("Invalid topo file (multiple Masters defined!)")
+				os.Exit(1)
+			}
+			seen_master = true
+		}
+
 		node_map[cleaned_args[0]] = node
 	}
 	return node_map
@@ -78,7 +88,10 @@ func ParseByRole(node_map map[string]*Node) (*Node, map[string]*Node, map[string
 			witness_map[k] = v
 		case ROLE_BACKUP:
 			peer_map[k] = v
+		default:
+			panic("Unknown Role! Exiting...")
 		}
 	}
+	// fmt.Println(witness_map)
 	return master_node, peer_map, witness_map
 }
