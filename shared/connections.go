@@ -10,9 +10,10 @@ import (
 type NodeRole string
 
 const (
-	RoleMaster  NodeRole = "Master"
-	RoleBackup  NodeRole = "Backup"
-	RoleWitness NodeRole = "Witness"
+	ROLE_MASTER    NodeRole = "Master"
+	ROLE_BACKUP    NodeRole = "Backup"
+	ROLE_CANDIDATE NodeRole = "Candidate"
+	ROLE_WITNESS   NodeRole = "Witness"
 )
 
 type Node struct {
@@ -46,19 +47,18 @@ func Parse(filename string) map[string]*Node {
 	return node_map
 }
 
-func ParseByRole(node_map map[string]*Node) (map[string]*Node, map[string]*Node, map[string]*Node) {
+func ParseByRole(node_map map[string]*Node) (map[string]*Node, map[string]*Node) {
 	witness_map := make(map[string]*Node)
-	backup_map := make(map[string]*Node)
-	master_map := make(map[string]*Node)
+	peer_map := make(map[string]*Node)
 	for k, v := range node_map {
 		switch v.Role {
-		case RoleMaster:
-			master_map[k] = v
-		case RoleWitness:
+		case ROLE_MASTER:
+			peer_map[k] = v
+		case ROLE_WITNESS:
 			witness_map[k] = v
-		case RoleBackup:
-			backup_map[k] = v
+		case ROLE_BACKUP:
+			peer_map[k] = v
 		}
 	}
-	return master_map, witness_map, backup_map
+	return peer_map, witness_map
 }

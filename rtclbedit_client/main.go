@@ -27,7 +27,8 @@ func main() {
 		c, _ := rpc.Dial("tcp", v.Ip+":"+v.Port)
 		witness_clients = append(witness_clients, c)
 	}
-	// sending 1 request
+
+	// Example of sending 1 request
 	{
 		log.Printf("Client %s making requests...", name)
 		args := ExecuteArgs{}

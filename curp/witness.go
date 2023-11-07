@@ -2,12 +2,13 @@ package curp
 
 import (
 	"net/rpc"
-	. "rtclbedit/shared"
+
+	mapset "github.com/deckarep/golang-set/v2"
 )
 
 type Witness struct {
 	name          string
-	unsynced      []Operation
+	unsynced      mapset.Set[string]
 	master_client map[string]*rpc.Client
 }
 

@@ -6,6 +6,8 @@ import (
 	"net/rpc"
 	. "rtclbedit/shared"
 	"time"
+
+	mapset "github.com/deckarep/golang-set/v2"
 )
 
 func Connect(name string, node_map map[string]*Node) map[string]*rpc.Client {
@@ -41,32 +43,23 @@ func InitRPC(name string, node_map map[string]*Node) {
 
 }
 
-func InitMaster(name string, witness_map map[string]*Node, backup_map map[string]*Node) {
-	witness_send_map := Connect(name, witness_map)
-	backup_send_map := Connect(name, backup_map)
-
-	master := &Master{
+func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*Node, appChan chan ExecuteMsg) *Curp {
+	c := &Curp{
 		name:            name,
-		unsynced:        []Operation{},
-		witness_clients: witness_send_map,
-		backup_clients:  backup_send_map,
+		witness_clients: Connect(name, witness_map),
+		peers_clients:   Connect(name, peer_map),
+		appChan:         appChan,
+		timeoutChan:     make(chan struct{}, 1),
+		currentTerm:     0,
+		votedFor:        -1,
+		syncedIndex:     0,
+		nextIndex:       make([]int, len(peer_map)),
+		matchIndex:      make([]int, len(peer_map)),
+		role:            ROLE_BACKUP,
 	}
 
-	rpc.Register(master)
-}
-
-func InitBackup(name string, master_map map[string]*Node) {
-	if len(master_map) != 1 {
-		log.Fatalf("Backup %s has more than one master!", name)
-	}
-
-	master_send_map := Connect(name, master_map)
-	backup := &Backup{
-		name:          name,
-		master_client: master_send_map,
-	}
-
-	rpc.Register(backup)
+	rpc.Register(c)
+	return c
 }
 
 func InitWitness(name string, master_map map[string]*Node) {
@@ -74,11 +67,10 @@ func InitWitness(name string, master_map map[string]*Node) {
 		log.Fatalf("Backup %s has more than one master!", name)
 	}
 
-	master_send_map := Connect(name, master_map)
 	witness := &Witness{
 		name:          name,
-		unsynced:      []Operation{},
-		master_client: master_send_map,
+		unsynced:      mapset.NewSet[string](),
+		master_client: Connect(name, master_map),
 	}
 
 	rpc.Register(witness)
