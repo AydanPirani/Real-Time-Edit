@@ -16,7 +16,7 @@ type OrderAsyncArgs struct {
 	PrevLogIndex int
 	PrevLogTerm  int
 	Entries      []LogEntry
-	LeaderCommit int
+	LeaderSynced int
 }
 type OrderAsyncReply struct {
 	Term    int
@@ -38,7 +38,7 @@ func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) {
 	if args.Term > cr.currentTerm {
 		cr.currentTerm = args.Term
 		reply.Term = cr.currentTerm
-		cr.votedFor = -1
+		cr.votedFor = HAS_NOT_VOTED
 	}
 	// 3. If candidate or leader, step down
 	if args.LeaderName != cr.name && cr.role != ROLE_BACKUP {
@@ -78,12 +78,12 @@ func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) {
 	cr.log = append(cr.log, args.Entries[i:]...)
 
 	// 8. Advance state machine with newly committed entries
-	for args.LeaderCommit > cr.syncedIndex && cr.syncedIndex < args.PrevLogIndex+len(args.Entries)+1 {
-		executeMessage := &ExecuteMsg{
+	for args.LeaderSynced > cr.syncedIndex && cr.syncedIndex < args.PrevLogIndex+len(args.Entries)+1 {
+		executeMessage := ExecuteMsg{
 			CommandValid: true, Command: cr.log[cr.syncedIndex].Command, CommandIndex: cr.syncedIndex + 1,
 		}
-		cr.appChan <- *executeMessage
-		DPrintf("Follower %d committing command %d\n", cr.name, executeMessage.CommandIndex)
+		cr.appChan <- executeMessage
+		DPrintf("Follower %d executing command %d\n", cr.name, executeMessage.CommandIndex)
 		cr.syncedIndex++
 	}
 
