@@ -64,19 +64,6 @@ func (c *Curp) Sync(args SyncArgs, reply *SyncReply) error { // syncRPC called b
 	return nil
 }
 
-type OrderAsyncArgs struct {
-	Term         int
-	LeaderId     int
-	PrevLogIndex int
-	PrevLogTerm  int
-	Entries      []LogEntry
-	LeaderCommit int
-}
-type OrderAsyncReply struct {
-	Term    int
-	Success bool
-}
+func (c *Curp) sendOrderAsync(name string, heartbeat bool) {
 
-func (c *Curp) OrderAsync(args OrderAsyncArgs, reply *OrderAsyncReply) error { // called by master to backups
-	return nil
 }

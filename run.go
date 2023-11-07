@@ -13,11 +13,15 @@ func main() {
 		os.Exit(1)
 	}
 	name := args[1]
+	fmt.Println(name)
 	filename := args[2]
 
 	node_map := Parse(filename)
-	peer_map, witness_map := ParseByRole(node_map)
+	// master_node, peer_map, witness_map := ParseByRole(node_map)
+	master_node, _, _ := ParseByRole(node_map)
 
+	fmt.Println(master_node)
 	for {
+
 	}
 }

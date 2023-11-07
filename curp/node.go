@@ -10,24 +10,24 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
-func Connect(name string, node_map map[string]*Node) map[string]*rpc.Client {
+func ConnectMultiple(node_map map[string]*Node) map[string]*rpc.Client {
 	connection_map := make(map[string]*rpc.Client)
-	for _, v := range node_map {
-		for {
-			addr := v.Ip + ":" + v.Port
-			conn, err := rpc.Dial("tcp", addr)
-			if err != nil {
-				// log.Println("Failed to connect to " + v.name)
-				time.Sleep(150 * time.Millisecond)
-			} else {
-
-				connection_map[v.Name] = conn
-				break
-			}
-		}
-
+	for _, node := range node_map {
+		connection_map[node.Name] = Connect(node)
 	}
 	return connection_map
+}
+
+func Connect(node *Node) *rpc.Client {
+	for {
+		addr := node.Ip + ":" + node.Port
+		conn, err := rpc.Dial("tcp", addr)
+		if err != nil {
+			time.Sleep(150 * time.Millisecond)
+		} else {
+			return conn
+		}
+	}
 }
 
 func InitRPC(name string, node_map map[string]*Node) {
@@ -40,14 +40,13 @@ func InitRPC(name string, node_map map[string]*Node) {
 	}
 
 	go rpc.Accept(listener)
-
 }
 
 func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*Node, appChan chan ExecuteMsg) *Curp {
 	c := &Curp{
 		name:            name,
-		witness_clients: Connect(name, witness_map),
-		peers_clients:   Connect(name, peer_map),
+		witness_clients: ConnectMultiple(witness_map),
+		peers_clients:   ConnectMultiple(peer_map),
 		appChan:         appChan,
 		timeoutChan:     make(chan struct{}, 1),
 		currentTerm:     0,
@@ -62,15 +61,15 @@ func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*No
 	return c
 }
 
-func InitWitness(name string, master_map map[string]*Node) {
-	if len(master_map) != 1 {
+func InitWitness(name string, master_node *Node) {
+	if master_node == nil {
 		log.Fatalf("Backup %s has more than one master!", name)
 	}
 
 	witness := &Witness{
 		name:          name,
 		unsynced:      mapset.NewSet[string](),
-		master_client: Connect(name, master_map),
+		master_client: Connect(master_node),
 	}
 
 	rpc.Register(witness)

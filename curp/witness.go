@@ -9,7 +9,7 @@ import (
 type Witness struct {
 	name          string
 	unsynced      mapset.Set[string]
-	master_client map[string]*rpc.Client
+	master_client *rpc.Client
 }
 
 /**
