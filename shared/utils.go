@@ -2,11 +2,12 @@ package shared
 
 import "log"
 
-func Map_begin(m map[string]*Node) *Node {
-	for _, v := range m {
-		return v
+func Map(list []string, f func(string) string) []string {
+	result := make([]string, len(list))
+	for i, v := range list {
+		result[i] = f(v)
 	}
-	return nil
+	return result
 }
 
 // Debugging

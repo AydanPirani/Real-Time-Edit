@@ -7,18 +7,27 @@ import (
 	"os"
 	. "rtclbedit/curp"
 	. "rtclbedit/shared"
+	"strconv"
 )
 
 func main() {
 	args := os.Args
-	if len(os.Args) != 3 {
-		fmt.Println("[usage]: " + args[0] + " <identifier> <configuration file>")
+
+	if len(os.Args) != 4 {
+		fmt.Println("[usage]: " + args[0] + " <identifier> <configuration file> <num_nodes>")
 		os.Exit(1)
 	}
 
 	name := args[1]
 	filename := args[2]
-	node_map := Parse(filename)
+	node_ct, err := strconv.Atoi(args[3])
+
+	if err != nil {
+		fmt.Println("Must have an integer node count!")
+		os.Exit(1)
+	}
+
+	node_map := Parse(filename, node_ct)
 	master_node, _, witness_map := ParseByRole(node_map)
 	master_client, _ := rpc.Dial("tcp", master_node.Ip+":"+master_node.Port)
 	var witness_clients []*rpc.Client

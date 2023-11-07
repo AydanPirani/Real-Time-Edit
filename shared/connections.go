@@ -2,6 +2,7 @@ package shared
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -23,27 +24,42 @@ type Node struct {
 	Port string
 }
 
-func Parse(filename string) map[string]*Node {
+func isValidTopoRole(role NodeRole) bool {
+	return role == ROLE_MASTER || role == ROLE_BACKUP || role == ROLE_WITNESS
+}
 
+func Parse(filename string, num_nodes int) map[string]*Node {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Println("failed to open file ", filename)
 	}
 
 	reader := bufio.NewScanner(file)
-	num_nodes := 5 //hardcoded number
 	node_map := make(map[string]*Node)
+
 	for i := 0; i < num_nodes; i++ {
 		reader.Scan()
 		text := reader.Text()
-		test_split := strings.Split(text, " ")
-		node := new(Node)
-		node.Name = test_split[0]
-		node.Role = NodeRole(test_split[1])
-		node.Ip = test_split[2]
-		node.Port = test_split[3]
+		raw_args := strings.Split(text, ",")
+		cleaned_args := Map(raw_args, strings.TrimSpace)
 
-		node_map[test_split[0]] = node
+		if len(cleaned_args) != 4 {
+			fmt.Println("Invalid topo file format! Expected: \n<name>, <role>, <ip>, <port>")
+			os.Exit(1)
+		}
+
+		node := new(Node)
+		node.Name = cleaned_args[0]
+		node.Role = NodeRole(cleaned_args[1])
+		node.Ip = cleaned_args[2]
+		node.Port = cleaned_args[3]
+
+		if !isValidTopoRole(node.Role) {
+			fmt.Println("Invalid topo file (bad role)! Expected roles: Master, Backup, Witness")
+			os.Exit(1)
+		}
+
+		node_map[cleaned_args[0]] = node
 	}
 	return node_map
 }
