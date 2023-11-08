@@ -37,13 +37,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	DPrintf("%s: pre-init", identifier)
 	InitRPC(identifier, node_map)
-	DPrintf("%s: post-init", identifier)
 
 	DPrintf("%s: pre-switch", identifier)
 	channel := make(chan ExecuteMsg)
-	DPrintf("%s: post-channel", identifier)
 	switch curr_node.Role {
 	case ROLE_MASTER:
 		InitCurp(identifier, peer_map, witness_map, channel)

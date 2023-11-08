@@ -18,7 +18,7 @@ type SyncReply struct {
 /**
  * RPC functions
  */
-func (cr *Curp) Execute(args ExecuteArgs, reply *ExecuteReply) { // executeRPC called by clients to master
+func (cr *Curp) Execute(args ExecuteArgs, reply *ExecuteReply) error { // executeRPC called by clients to master
 	executeMessage := ExecuteMsg{
 		CommandValid: true,
 		Command:      cr.log[cr.syncedIndex].Command,
@@ -28,9 +28,9 @@ func (cr *Curp) Execute(args ExecuteArgs, reply *ExecuteReply) { // executeRPC c
 	DPrintf("Leader %d executing command %d\n", cr.name, executeMessage.CommandIndex)
 	// ordering in the background
 	go cr.Start(args.Command)
-	return
+	return nil
 }
 
-func (cr *Curp) Sync(args SyncArgs, reply *SyncReply) { // syncRPC called by clients to master
-
+func (cr *Curp) Sync(args SyncArgs, reply *SyncReply) error { // syncRPC called by clients to master
+	return nil
 }

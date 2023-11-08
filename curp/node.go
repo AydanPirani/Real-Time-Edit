@@ -47,8 +47,8 @@ func InitRPC(name string, node_map map[string]*Node) {
 }
 
 func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*Node, appChan chan ExecuteMsg) *Curp {
-	DPrintf("%s: creating", name)
-	c := &Curp{
+	// DPrintf("%s: creating", name)
+	curp := &Curp{
 		name:            name,
 		witness_clients: ConnectMultiple(witness_map),
 		peer_clients:    ConnectMultiple(peer_map),
@@ -62,9 +62,9 @@ func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*No
 		role:            ROLE_BACKUP,
 	}
 	DPrintf("%s: pre reg", name)
-	rpc.Register(c)
+	rpc.Register(curp)
 	DPrintf("%s: post reg", name)
-	return c
+	return curp
 }
 
 func InitWitness(name string, master_node *Node) {

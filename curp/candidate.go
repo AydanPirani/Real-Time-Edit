@@ -105,7 +105,7 @@ func (cr *Curp) StartElection() {
 	cr.mu.Unlock()
 }
 
-func (cr *Curp) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
+func (cr *Curp) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) error {
 	// Your code here (2A, 2B).
 	// Read the fields in "args",
 	// and accordingly assign the values for fields in "reply".
@@ -118,7 +118,7 @@ func (cr *Curp) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		reply.Term = cr.currentTerm
 		reply.VoteGranted = false
 		cr.mu.Unlock()
-		return
+		return nil
 	}
 
 	if args.Term > reply.Term {
@@ -137,7 +137,7 @@ func (cr *Curp) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 				DPrintf("%d VOTE NO for %d's election because disagree logs\n", cr.name, args.CandidateName)
 				reply.VoteGranted = false
 				cr.mu.Unlock()
-				return
+				return nil
 			}
 		}
 		reply.Term = cr.currentTerm
@@ -151,9 +151,10 @@ func (cr *Curp) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	} else {
 		cr.mu.Unlock()
 	}
+	return nil
 }
 
 func (cr *Curp) sendRequestVote(name string, args *RequestVoteArgs, reply *RequestVoteReply) error {
-	ok := cr.peer_clients[name].Call("Raft.RequestVote", args, reply)
+	ok := cr.peer_clients[name].Call("Curp.RequestVote", args, reply)
 	return ok
 }

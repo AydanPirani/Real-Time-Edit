@@ -23,7 +23,7 @@ type OrderAsyncReply struct {
 	Success bool
 }
 
-func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) {
+func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) error {
 	// TODO: reply.term ???
 	// 1. Return if term < currentTerm
 	cr.mu.Lock()
@@ -32,7 +32,7 @@ func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) {
 	if args.Term < cr.currentTerm {
 		reply.Success = false
 		cr.mu.Unlock()
-		return
+		return nil
 	}
 	// 2. If term > currentTerm, currentTerm ← term
 	if args.Term > cr.currentTerm {
@@ -55,9 +55,10 @@ func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) {
 		DPrintf("args.PrevLogIndex %d args.PrevLogTerm %d\n", args.PrevLogIndex, args.PrevLogTerm)
 		DPrintf("c.log[args.PrevLogIndex] %+v\n", cr.log[args.PrevLogIndex])
 	}
-	if args.PrevLogIndex >= len(cr.log) || (args.PrevLogIndex != -1 && cr.log[args.PrevLogIndex].Term != args.PrevLogTerm) {
+	if args.PrevLogIndex >= len(cr.log) ||
+		(args.PrevLogIndex != -1 && cr.log[args.PrevLogIndex].Term != args.PrevLogTerm) {
 		reply.Success = false
-		return
+		return nil
 	}
 	reply.Success = true
 	DPrintf("args.Entries: %+v", args.Entries)
@@ -86,5 +87,5 @@ func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) {
 		DPrintf("Follower %d executing command %d\n", cr.name, executeMessage.CommandIndex)
 		cr.syncedIndex++
 	}
-
+	return nil
 }
