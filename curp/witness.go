@@ -37,3 +37,9 @@ func (w *Witness) Record(args RecordArgs, reply *RecordReply) error { // recordR
 	fmt.Println("RECEIVED RECORD RPC MESSAGE")
 	return nil
 }
+
+func (w *Witness) WitnessLifetime() {
+	for {
+
+	}
+}

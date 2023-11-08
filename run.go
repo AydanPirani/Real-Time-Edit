@@ -42,18 +42,17 @@ func main() {
 	DPrintf("%s: pre-switch", identifier)
 	channel := make(chan ExecuteMsg)
 	switch curr_node.Role {
-	case ROLE_MASTER:
-		InitCurp(identifier, peer_map, witness_map, channel)
-	case ROLE_BACKUP:
-		InitCurp(identifier, peer_map, witness_map, channel)
+	case ROLE_MASTER, ROLE_BACKUP:
+		c := InitCurp(identifier, peer_map, witness_map, channel)
+		c.CurpLifetime() // busy-wait forever
 	case ROLE_WITNESS:
-		InitWitness(identifier, master_node)
+		w := InitWitness(identifier, master_node)
+		w.WitnessLifetime() // busy-wait forever
 	default:
 		panic("Unknown Role! Exiting...")
 	}
 	DPrintf("%s: post-switch", identifier)
 
-	// Busy-wait forever
-	for {
-	}
+	// for {
+	// }
 }

@@ -83,7 +83,7 @@ func ParseByRole(node_map map[string]*Node) (*Node, map[string]*Node, map[string
 		switch v.Role {
 		case ROLE_MASTER:
 			peer_map[k] = v
-			master_node = v
+			// master_node = v
 		case ROLE_WITNESS:
 			witness_map[k] = v
 		case ROLE_BACKUP:

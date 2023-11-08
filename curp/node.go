@@ -67,7 +67,7 @@ func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*No
 	return curp
 }
 
-func InitWitness(name string, master_node *Node) {
+func InitWitness(name string, master_node *Node) *Witness {
 	if master_node == nil {
 		log.Fatalf("Backup %s has more than one master!", name)
 	}
@@ -79,9 +79,10 @@ func InitWitness(name string, master_node *Node) {
 	}
 
 	rpc.Register(witness)
+	return witness
 }
 
-func (cr *Curp) NodeLifetime() {
+func (cr *Curp) CurpLifetime() {
 	//TODO: sleep or semamore or conditional variable
 	//Might redesign
 	for !cr.killed() {
