@@ -46,7 +46,7 @@ func InitRPC(name string, node_map map[string]*Node) {
 	go rpc.Accept(listener)
 }
 
-func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*Node, appChan chan ExecuteMsg) *Curp {
+func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*Node, role NodeRole, appChan chan ExecuteMsg) *Curp {
 	// DPrintf("%s: creating", name)
 	curp := &Curp{
 		name:            name,
@@ -59,7 +59,8 @@ func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*No
 		syncedIndex:     0,
 		nextIndex:       make(map[string]int),
 		matchIndex:      make(map[string]int),
-		role:            ROLE_BACKUP,
+		role:            role,
+		indexCounter:    rand.Intn(10),
 	}
 	DPrintf("%s: pre reg", name)
 	rpc.Register(curp)
@@ -89,11 +90,11 @@ func (cr *Curp) CurpLifetime() {
 		cr.mu.Lock()
 		role := cr.role
 		cr.mu.Unlock()
-		// DPrintf("Server %d %s\n", rf.me, role)
+
 		switch role {
 		case ROLE_BACKUP:
 			{
-				timer := time.Duration(rand.Intn(500-300+cr.indexCounter*50)+300) * time.Millisecond
+				timer := time.Duration(rand.Intn(5000-3000+cr.indexCounter*500)+3000) * time.Millisecond
 				select {
 				case <-cr.timeoutChan:
 					{
@@ -104,7 +105,7 @@ func (cr *Curp) CurpLifetime() {
 					{
 						// send request vote
 						cr.mu.Lock()
-						DPrintf("Election Timed out at server %d, switching to Candidate\n", cr.name)
+						DPrintf("Election Timed out at server %s, switching to Candidate\n", cr.name)
 						cr.role = ROLE_CANDIDATE
 						cr.mu.Unlock()
 						break
@@ -119,14 +120,16 @@ func (cr *Curp) CurpLifetime() {
 			}
 		case ROLE_MASTER:
 			{
+				DPrintf("server %s lifetime. role = %s", cr.name, role)
 				cr.SendHeartbeat()
 				//TODO config variable for heartbeat frequency
-				time.Sleep(time.Duration(150) * time.Millisecond)
+				time.Sleep(time.Duration(1500) * time.Millisecond)
 				break
 			}
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(time.Duration(100) * time.Millisecond)
 	}
+	DPrintf("stuff")
 }
 
 func (cr *Curp) Kill() {

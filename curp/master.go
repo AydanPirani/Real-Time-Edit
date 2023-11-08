@@ -19,13 +19,14 @@ type SyncReply struct {
  * RPC functions
  */
 func (cr *Curp) Execute(args ExecuteArgs, reply *ExecuteReply) error { // executeRPC called by clients to master
+	// DPrintf("not sutpid")
 	executeMessage := ExecuteMsg{
 		CommandValid: true,
-		Command:      cr.log[cr.syncedIndex].Command,
+		Command:      args.Command,
 		CommandIndex: cr.syncedIndex + 1,
 	}
 	cr.appChan <- executeMessage
-	DPrintf("Leader %d executing command %d\n", cr.name, executeMessage.CommandIndex)
+	DPrintf("Leader %s executing command %d\n", cr.name, executeMessage.CommandIndex)
 	// ordering in the background
 	go cr.Start(args.Command)
 	return nil

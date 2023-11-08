@@ -72,19 +72,19 @@ func (cr *Curp) sendOrderAsync(peer_name string, heartbeat bool) {
 		args.Entries = cr.log[prevIndex+1:]
 	}
 
-	// DPrintf("Leader %d sending message %+v to server %d\n", rf.me, args, server)
+	// DPrintf("Leader %s sending message %+v to server %d\n", rf.me, args, server)
 	cr.mu.Unlock()
 	var reply OrderAsyncReply
 	good := cr.peer_clients[peer_name].Call("Curp.OrderAsync", args, &reply)
 	cr.mu.Lock()
-	if good != nil {
+	if good == nil {
 		if reply.Success {
 			// DPrintf("Got success %+v\n", reply)
 			if prevIndex+len(args.Entries) >= cr.nextIndex[peer_name] {
 				cr.nextIndex[peer_name] = prevIndex + len(args.Entries) + 1
 				cr.matchIndex[peer_name] = prevIndex + len(args.Entries)
 
-				DPrintf("Server %d updated server %d to %d\n", cr.name, peer_name, cr.nextIndex[peer_name])
+				DPrintf("Server %s updated server %s to %d\n", cr.name, peer_name, cr.nextIndex[peer_name])
 			}
 
 			lastEntry := prevIndex + len(args.Entries)
@@ -99,7 +99,7 @@ func (cr *Curp) sendOrderAsync(peer_name string, heartbeat bool) {
 					for lastEntry+1 > cr.syncedIndex {
 						cr.syncedIndex++
 					}
-					DPrintf("Leader %d updated synced index to %d\n", cr.name, cr.syncedIndex)
+					DPrintf("Leader %s updated synced index to %d\n", cr.name, cr.syncedIndex)
 				}
 			}
 		} else {
@@ -109,7 +109,7 @@ func (cr *Curp) sendOrderAsync(peer_name string, heartbeat bool) {
 				cr.votedFor = HAS_NOT_VOTED
 				cr.role = ROLE_BACKUP
 			} else {
-				// log.Printf("LEADER updating %d nextIndex to %d\n", server, reply.LastMatch+1)
+				// log.Printf("LEADER updating %s nextIndex to %d\n", server, reply.LastMatch+1)
 				// rf.nextIndex[server] = reply.LastMatch + 1
 				cr.nextIndex[peer_name] -= 2
 				if cr.nextIndex[peer_name] < 0 {
@@ -118,9 +118,8 @@ func (cr *Curp) sendOrderAsync(peer_name string, heartbeat bool) {
 				// go rf.sendAppendEntries(server, false)
 			}
 		}
-		cr.mu.Unlock()
 	}
-
+	cr.mu.Unlock()
 }
 
 func (cr *Curp) SendHeartbeat() {
@@ -128,6 +127,7 @@ func (cr *Curp) SendHeartbeat() {
 		if name == cr.name {
 			continue
 		}
+		DPrintf("leader %s sending heartbeat to %s", cr.name, name)
 		go cr.sendOrderAsync(name, true)
 	}
 }

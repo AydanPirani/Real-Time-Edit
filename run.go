@@ -2,13 +2,16 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	. "rtclbedit/curp"
 	. "rtclbedit/shared"
 	"strconv"
+	"time"
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	args := os.Args
 	if len(os.Args) != 4 {
 		fmt.Println("[usage]: " + args[0] + " <identifier> <topo_file> <num_nodes>")
@@ -42,17 +45,22 @@ func main() {
 	DPrintf("%s: pre-switch", identifier)
 	channel := make(chan ExecuteMsg)
 	switch curr_node.Role {
-	case ROLE_MASTER, ROLE_BACKUP:
-		c := InitCurp(identifier, peer_map, witness_map, channel)
-		c.CurpLifetime() // busy-wait forever
+	case ROLE_MASTER:
+		c := InitCurp(identifier, peer_map, witness_map, ROLE_MASTER, channel)
+		go c.CurpLifetime() // busy-wait forever
+	case ROLE_BACKUP:
+		c := InitCurp(identifier, peer_map, witness_map, ROLE_BACKUP, channel)
+		go c.CurpLifetime() // busy-wait forever
 	case ROLE_WITNESS:
 		w := InitWitness(identifier, master_node)
-		w.WitnessLifetime() // busy-wait forever
+		go w.WitnessLifetime() // busy-wait forever
 	default:
 		panic("Unknown Role! Exiting...")
 	}
 	DPrintf("%s: post-switch", identifier)
 
-	// for {
-	// }
+	for {
+		exe_msg := <-channel
+		DPrintf("Server %s app channel %v+", identifier, exe_msg)
+	}
 }

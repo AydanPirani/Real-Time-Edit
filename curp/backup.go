@@ -26,6 +26,7 @@ type OrderAsyncReply struct {
 func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) error {
 	// TODO: reply.term ???
 	// 1. Return if term < currentTerm
+	DPrintf("server %s receives %v+", cr.name, args)
 	cr.mu.Lock()
 	reply.Term = cr.currentTerm
 
@@ -74,7 +75,7 @@ func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) error {
 		}
 		i++
 	}
-	DPrintf("cr.name: %d cr.log: %+v\n", cr.name, cr.log)
+	DPrintf("cr.name: %s cr.log: %+v\n", cr.name, cr.log)
 	// 7. Append any new entries not already in the log
 	cr.log = append(cr.log, args.Entries[i:]...)
 
@@ -84,7 +85,7 @@ func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) error {
 			CommandValid: true, Command: cr.log[cr.syncedIndex].Command, CommandIndex: cr.syncedIndex + 1,
 		}
 		cr.appChan <- executeMessage
-		DPrintf("Follower %d executing command %d\n", cr.name, executeMessage.CommandIndex)
+		DPrintf("Follower %s executing command %d\n", cr.name, executeMessage.CommandIndex)
 		cr.syncedIndex++
 	}
 	return nil

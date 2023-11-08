@@ -47,17 +47,15 @@ func (cr *Curp) StartElection() {
 		LastLogTerm:   lastTerm,
 	}
 	cr.mu.Unlock()
-	// DPrintf("Server %d starting election at term %d\n", rf.me, rf.currentTerm)
 	for name := range cr.peer_clients {
 		go func(name string) {
-			// DPrintf("Server %d sending RequestVote to %d\n", rf.me, i)
 			var reply RequestVoteReply
 			if cr.sendRequestVote(name, args, &reply) != nil {
 				electionResponse <- reply
 			}
 		}(name)
 	}
-	timer := time.Duration(rand.Intn(500-150)+150) * time.Millisecond
+	timer := time.Duration(rand.Intn(5000-1500)+1500) * time.Millisecond
 	votes := 0
 	electionDone := false
 	n := len(cr.peer_clients)
@@ -65,7 +63,7 @@ func (cr *Curp) StartElection() {
 		select {
 		case reply := <-electionResponse:
 			{
-				// DPrintf("Server %d got response from %+v \n", cr.name, reply)
+				DPrintf("Server %s got response from %+v \n", cr.name, reply)
 				cr.mu.Lock()
 				if reply.Term > cr.currentTerm {
 					cr.role = ROLE_BACKUP
@@ -78,6 +76,7 @@ func (cr *Curp) StartElection() {
 				// process reply, terminate if election succeeded
 				if reply.VoteGranted {
 					votes++
+					DPrintf("Server %s got %d votes\n", cr.name, votes)
 				}
 				if votes > n/2 {
 					cr.role = ROLE_MASTER
@@ -101,7 +100,7 @@ func (cr *Curp) StartElection() {
 		}
 	}
 	cr.mu.Lock()
-	DPrintf("Server %d: Election terminated, role: %s\n", cr.name, cr.role)
+	DPrintf("Server %s: Election terminated, role: %s\n", cr.name, cr.role)
 	cr.mu.Unlock()
 }
 
@@ -134,7 +133,7 @@ func (cr *Curp) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) erro
 		if len(cr.log) > 0 {
 			if cr.log[len(cr.log)-1].Term > args.LastLogTerm ||
 				(cr.log[len(cr.log)-1].Term == args.LastLogTerm && len(cr.log)-1 > args.LastLogIndex) {
-				DPrintf("%d VOTE NO for %d's election because disagree logs\n", cr.name, args.CandidateName)
+				DPrintf("%s VOTE NO for %s's election because disagree logs\n", cr.name, args.CandidateName)
 				reply.VoteGranted = false
 				cr.mu.Unlock()
 				return nil
@@ -143,7 +142,7 @@ func (cr *Curp) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) erro
 		reply.Term = cr.currentTerm
 		reply.VoteGranted = true
 		cr.votedFor = args.CandidateName
-		DPrintf("Server %d voted for %d \n", cr.name, cr.votedFor)
+		DPrintf("Server %s voted for %s \n", cr.name, cr.votedFor)
 		cr.mu.Unlock()
 
 		// reset election timeout
