@@ -48,10 +48,12 @@ type Curp struct {
 type ExecuteArgs struct {
 }
 type ExecuteReply struct {
+	Status int
 }
 type SyncArgs struct {
 }
 type SyncReply struct {
+	Status int
 }
 
 /**
@@ -60,11 +62,15 @@ type SyncReply struct {
 func (c *Curp) Execute(args ExecuteArgs, reply *ExecuteReply) error { // executeRPC called by clients to master
 	fmt.Println("RECEIVED RPC EXECUTE MESSAGE")
 	fmt.Println(args)
+	reply.Status = SUCCESS_STATUS
+	fmt.Println("SENT EXECUTE REPLY")
+	fmt.Println(reply)
 	return nil
 }
 
 func (c *Curp) Sync(args SyncArgs, reply *SyncReply) error { // syncRPC called by clients to master
 	fmt.Println("RECEIVED RPC SYNC MESSAGE")
+	reply.Status = SUCCESS_STATUS
 	return nil
 }
 

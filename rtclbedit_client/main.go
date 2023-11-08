@@ -43,20 +43,31 @@ func main() {
 		// witness_clients = append(witness_clients, c)
 		witness_clients[k] = c
 	}
+	log.Printf("Client %s connected!", name)
 
 	// Example of sending 1 request
+	log.Printf("Sending request...")
 	{
 		args := ExecuteArgs{}
 		reply := ExecuteReply{}
-		master_client.Call("Curp.Execute", args, reply)
+		master_client.Call("Curp.Execute", args, &reply)
+		fmt.Println("RECEIVED EXECUTE REPLY")
+		fmt.Println(reply)
+		if reply.Status == FAILURE_STATUS {
+			fmt.Println("ERROR WITH CALLING MASTER!")
+		}
 
-		for _, witness_client := range witness_clients {
-			args := RecordArgs{}
+		for name, witness_client := range witness_clients {
+			args := RecordArgs{Name: name}
 			reply := RecordReply{}
 			// TODO: CONVERT THIS TO GOROUTINES
-			witness_client.Call("Witness.Record", args, reply)
+			witness_client.Call("Witness.Record", args, &reply)
+			if reply.Status == FAILURE_STATUS {
+				fmt.Printf("ERROR! Unable to record to node %s", args.Name)
+			}
 		}
 	}
+	log.Printf("Finished operations!")
 
 	// [TODO] error handling
 

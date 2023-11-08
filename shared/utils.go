@@ -19,3 +19,8 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 	}
 	return
 }
+
+const (
+	SUCCESS_STATUS = iota
+	FAILURE_STATUS
+)
