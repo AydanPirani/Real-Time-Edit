@@ -32,31 +32,29 @@ func main() {
 	log.Println(master_node)
 	master_client, _ := rpc.Dial("tcp", master_node.Ip+":"+master_node.Port)
 	log.Println(master_client)
-	var witness_clients []*rpc.Client
+	// var witness_clients []*rpc.Client
+
+	witness_clients := make(map[string]*rpc.Client)
 
 	fmt.Println(witness_map)
 	log.Printf("Client %s attempting to connect...", name)
-	for _, v := range witness_map {
+	for k, v := range witness_map {
 		c, _ := rpc.Dial("tcp", v.Ip+":"+v.Port)
-		witness_clients = append(witness_clients, c)
+		// witness_clients = append(witness_clients, c)
+		witness_clients[k] = c
 	}
 
 	// Example of sending 1 request
 	{
-		log.Printf("Client %s making requests...", name)
 		args := ExecuteArgs{}
 		reply := ExecuteReply{}
-		log.Printf("Client %s calling master execute...", name)
-		log.Println(master_client)
-		master_client.Call("Master.Execute", args, reply)
+		master_client.Call("Curp.Execute", args, reply)
 
-		log.Printf("Client %s sending record to the witness...", name)
 		for _, witness_client := range witness_clients {
-			go func(witness_client *rpc.Client) {
-				args := RecordArgs{}
-				reply := RecordReply{}
-				witness_client.Call("Witness.Record", args, reply)
-			}(witness_client)
+			args := RecordArgs{}
+			reply := RecordReply{}
+			// TODO: CONVERT THIS TO GOROUTINES
+			witness_client.Call("Witness.Record", args, reply)
 		}
 	}
 

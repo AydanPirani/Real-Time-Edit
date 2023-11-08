@@ -7,6 +7,7 @@
 package curp
 
 import (
+	"fmt"
 	"net/rpc"
 	. "rtclbedit/shared"
 	"sync"
@@ -57,10 +58,13 @@ type SyncReply struct {
  * RPC functions
  */
 func (c *Curp) Execute(args ExecuteArgs, reply *ExecuteReply) error { // executeRPC called by clients to master
+	fmt.Println("RECEIVED RPC EXECUTE MESSAGE")
+	fmt.Println(args)
 	return nil
 }
 
 func (c *Curp) Sync(args SyncArgs, reply *SyncReply) error { // syncRPC called by clients to master
+	fmt.Println("RECEIVED RPC SYNC MESSAGE")
 	return nil
 }
 
