@@ -8,6 +8,7 @@ import (
 	. "rtclbedit/curp"
 	. "rtclbedit/shared"
 	"strconv"
+	"sync"
 )
 
 func main() {
@@ -52,12 +53,18 @@ func main() {
 		reply := ExecuteReply{}
 		master_client.Call("Curp.Execute", args, &reply)
 		log.Printf("Client %s finish executed", name)
-		for _, witness_client := range witness_clients {
-			args := RecordArgs{}
-			reply := RecordReply{}
-			// TODO: CONVERT THIS TO GOROUTINES
-			witness_client.Call("Witness.Record", args, &reply)
+
+		var wg sync.WaitGroup
+		for witness_name, _ := range witness_clients {
+			wg.Add(1)
+			go func(name string) {
+				defer wg.Done()
+				args := RecordArgs{}
+				reply := RecordReply{}
+				witness_clients[name].Call("Witness.Record", args, &reply)
+			}(witness_name)
 		}
+		wg.Wait()
 		log.Printf("Client %s made command durable", name)
 	}
 
