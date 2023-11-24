@@ -2,12 +2,7 @@
 #include <unordered_map>
 #include <vector>
 
-struct Atom {
-  char element;
-  Atom(char e) : element(e) {}
-  Atom(const Atom& a) { element = a.element; }
-};
-
+#define Atom char
 #define PathVector std::vector<char>
 #define ChildrenMap std::unordered_map<char, Node*>
 #define MininodeMap std::unordered_map<std::string, Atom*>
@@ -19,7 +14,7 @@ struct Node {
 
   Node () { };
   Node (char c) {
-    Atom* a = new Atom(c);
+    Atom a = c;
     if (children.find(c) != children.end()) {
       throw std::runtime_error("Duplication of chars");
     }
@@ -70,7 +65,7 @@ class TreeDoc {
     
     std::cout << "ELEMENTS: ";
     for (const auto& a : node->mininodes) {
-      std::cout << a.second->element << " ";
+      std::cout << a.second << " ";
     }
     std::cout << std::endl << std::endl;
 
