@@ -5,7 +5,7 @@
 #define Atom char
 #define PathVector std::vector<char>
 #define ChildrenMap std::unordered_map<char, Node*>
-#define MininodeMap std::unordered_map<std::string, Atom*>
+#define MininodeMap std::unordered_map<std::string, Atom>
 
 struct Node {
   ChildrenMap children;
@@ -13,9 +13,8 @@ struct Node {
   PathVector path;
 
   Node () { };
-  Node (char c) {
-    Atom a = c;
-    if (children.find(c) != children.end()) {
+  Node (Atom a) {
+    if (children.find(a) != children.end()) {
       throw std::runtime_error("Duplication of chars");
     }
   };
@@ -30,22 +29,24 @@ class TreeDoc {
     root = new Node();  // Root node representing an empty character
   }
 
-  void insert(char c, PathVector path) {
+  // Lazily insert the atom into the tree at the given path, while adding nodes to accomodate
+  void insert(Atom a, PathVector path) {
     Node* curr = root;
     for (char direction : path) {
+      
+      // No child here -> create an empty path
       if (curr->children.find(direction) == curr->children.end()) {
         curr->children[direction] = new Node();
       }
       curr = curr->children[direction];
     }
     
-    Atom* newAtom = new Atom(c);
-    std::string posId = generatePosId(curr);
-    curr->mininodes[posId] = newAtom;
+    std::string posId = generateDisambiguator(curr);
+    curr->mininodes[posId] = a;
     curr->path = path;
   }
 
-  // Function to traverse and print the document
+  // Taverse and print the document
   void printDocument() {
     traverse(root);
   }
@@ -74,7 +75,8 @@ class TreeDoc {
     }
   }
 
-  std::string generatePosId(Node* node) {
+  // Function to generate the internal disambiguator - currently at just the Id
+  std::string generateDisambiguator(Node* node) {
     size_t mininode_ct = node->mininodes.size();
     return std::to_string(mininode_ct);
   }
