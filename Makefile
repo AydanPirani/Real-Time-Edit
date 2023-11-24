@@ -1,24 +1,10 @@
-# all: **.go
-# 	go build -race -o node .
-# 	go build -o client ./rtclbedit_client
-
-# run: all
-# 	bash run.sh 5
-
-# stop:
-# 	pkill -9 -f "./node"
-
-# clean: stop
-# 	rm ./node ./client
-	
 CC = g++
 CFLAGS = -std=c++11
-
 SRCS = crdt/main.cpp
 
-all: crdt node client
+all: treedoc node client
 
-crdt: $(SRCS)
+treedoc: $(SRCS)
 	$(CC) $(CFLAGS) $(SRCS) -o treedoc
 
 node:
@@ -34,4 +20,4 @@ stop:
 	pkill -9 -f "./node"
 
 clean: stop
-	rm -f crdt node client
+	rm -f treedoc node client
