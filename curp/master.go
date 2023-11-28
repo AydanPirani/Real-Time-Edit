@@ -13,6 +13,7 @@ type ExecuteReply struct {
 type SyncArgs struct {
 }
 type SyncReply struct {
+	Document string
 }
 
 /**
@@ -26,12 +27,16 @@ func (cr *Curp) Execute(args ExecuteArgs, reply *ExecuteReply) error { // execut
 		CommandIndex: cr.syncedIndex + 1,
 	}
 	cr.appChan <- executeMessage
-	DPrintf("Leader %s executing command %d\n", cr.name, executeMessage.CommandIndex)
+	cr.applyCmd(args.Command)
+	DPrintf("Leader %s executing command %d\n", cr.name, cr.syncedIndex+1)
 	// ordering in the background
 	go cr.Start(args.Command)
 	return nil
 }
 
 func (cr *Curp) Sync(args SyncArgs, reply *SyncReply) error { // syncRPC called by clients to master
+
+	DPrintf("Leader %s executing command %d\n", cr.name, cr.syncedIndex+1)
+	// no ordering? read does not change state
 	return nil
 }

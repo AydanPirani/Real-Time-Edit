@@ -46,13 +46,14 @@ func InitRPC(name string, node_map map[string]*Node) {
 	go rpc.Accept(listener)
 }
 
-func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*Node, role NodeRole, appChan chan ExecuteMsg) *Curp {
+func InitCurp(name string, peer_map map[string]*Node, witness_map map[string]*Node, role NodeRole, channel chan ExecuteMsg, socket net.Conn) *Curp {
 	// DPrintf("%s: creating", name)
 	curp := &Curp{
 		name:            name,
 		witness_clients: ConnectMultiple(witness_map),
 		peer_clients:    ConnectMultiple(peer_map),
-		appChan:         appChan,
+		appChan:         channel,
+		appPipe:         socket,
 		timeoutChan:     make(chan struct{}, 1),
 		currentTerm:     0,
 		votedFor:        HAS_NOT_VOTED,
@@ -140,4 +141,9 @@ func (cr *Curp) Kill() {
 func (cr *Curp) killed() bool {
 	z := atomic.LoadInt32(&cr.dead)
 	return z == 1
+}
+
+func (cr *Curp) applyCmd(cmd interface{}) {
+	str_cmd := cmd.(string)
+	cr.appPipe.Write([]byte(str_cmd))
 }

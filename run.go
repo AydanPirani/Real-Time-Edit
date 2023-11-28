@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"net"
 	"os"
 	. "rtclbedit/curp"
 	. "rtclbedit/shared"
@@ -13,13 +14,14 @@ import (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	args := os.Args
-	if len(os.Args) != 4 {
-		fmt.Println("[usage]: " + args[0] + " <identifier> <topo_file> <num_nodes>")
+	if len(os.Args) != 5 {
+		fmt.Println("[usage]: " + args[0] + " <identifier> <topo_file> <num_nodes> <app_pipe>")
 		os.Exit(1)
 	}
 	identifier := args[1]
 	topo_file := args[2]
 	num_nodes, err := strconv.Atoi(args[3])
+	app_pipe := args[4]
 
 	if err != nil {
 		fmt.Println("Must have an integer node count!")
@@ -42,14 +44,15 @@ func main() {
 
 	InitRPC(identifier, node_map)
 
-	DPrintf("%s: pre-switch", identifier)
 	channel := make(chan ExecuteMsg)
+	// err = unix.Mkfifo(app_pipe, 0666)
+	socket, err := net.Dial("unix", app_pipe)
 	switch curr_node.Role {
 	case ROLE_MASTER:
-		c := InitCurp(identifier, peer_map, witness_map, ROLE_MASTER, channel)
+		c := InitCurp(identifier, peer_map, witness_map, ROLE_MASTER, channel, socket)
 		go c.CurpLifetime() // busy-wait forever
 	case ROLE_BACKUP:
-		c := InitCurp(identifier, peer_map, witness_map, ROLE_BACKUP, channel)
+		c := InitCurp(identifier, peer_map, witness_map, ROLE_BACKUP, channel, socket)
 		go c.CurpLifetime() // busy-wait forever
 	case ROLE_WITNESS:
 		w := InitWitness(identifier, master_node)
@@ -57,7 +60,6 @@ func main() {
 	default:
 		panic("Unknown Role! Exiting...")
 	}
-	DPrintf("%s: post-switch", identifier)
 
 	for {
 		exe_msg := <-channel

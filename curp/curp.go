@@ -7,6 +7,7 @@
 package curp
 
 import (
+	"net"
 	"net/rpc"
 	. "rtclbedit/shared"
 	"sync"
@@ -29,6 +30,7 @@ type Curp struct {
 	witness_clients map[string]*rpc.Client
 	peer_clients    map[string]*rpc.Client
 	appChan         chan ExecuteMsg
+	appPipe         net.Conn // named pipe to send execution to
 	/**
 	 * Raft component member variables
 	 */
@@ -96,9 +98,23 @@ func (cr *Curp) sendOrderAsync(peer_name string, heartbeat bool) {
 					}
 				}
 				if count > len(cr.peer_clients)/2 {
-					for lastEntry+1 > cr.syncedIndex {
-						cr.syncedIndex++
+					// for lastEntry+1 > cr.syncedIndex {
+					// 	cr.syncedIndex++
+					// }
+					var wg sync.WaitGroup
+					for witness_name, _ := range cr.witness_clients {
+						wg.Add(1)
+						go func(name string) {
+							defer wg.Done()
+							args := DropArgs{
+								DropLog: cr.log[cr.syncedIndex : lastEntry+2],
+							}
+							reply := DropReply{}
+							cr.witness_clients[name].Call("Witness.Drop", args, &reply)
+						}(witness_name)
 					}
+					wg.Wait()
+					cr.syncedIndex = lastEntry + 1
 					DPrintf("Leader %s updated synced index to %d\n", cr.name, cr.syncedIndex)
 				}
 			}

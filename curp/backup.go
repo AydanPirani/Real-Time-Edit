@@ -82,10 +82,13 @@ func (cr *Curp) OrderAsync(args *OrderAsyncArgs, reply *OrderAsyncReply) error {
 	// 8. Advance state machine with newly committed entries
 	for args.LeaderSynced > cr.syncedIndex && cr.syncedIndex < args.PrevLogIndex+len(args.Entries)+1 {
 		executeMessage := ExecuteMsg{
-			CommandValid: true, Command: cr.log[cr.syncedIndex].Command, CommandIndex: cr.syncedIndex + 1,
+			CommandValid: true,
+			Command:      cr.log[cr.syncedIndex].Command,
+			CommandIndex: cr.syncedIndex + 1,
 		}
 		cr.appChan <- executeMessage
-		DPrintf("Follower %s executing command %d\n", cr.name, executeMessage.CommandIndex)
+		cr.applyCmd(cr.log[cr.syncedIndex].Command)
+		DPrintf("Follower %s executing command %d\n", cr.name, cr.syncedIndex+1)
 		cr.syncedIndex++
 	}
 	return nil
